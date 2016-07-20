@@ -23,10 +23,7 @@ import org.greenrobot.eventbus.Subscribe;
 
 import java.util.List;
 
-import rx.Observable;
 import rx.Subscription;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
 
 public class RecycleViewFragment extends Fragment{
 
@@ -41,12 +38,14 @@ public class RecycleViewFragment extends Fragment{
 
     @Override
     public void onStart() {
+        Log.i(TAG, "onStart called");
         super.onStart();
         EventBus.getDefault().register(this);
     }
 
     @Override
     public void onStop() {
+        Log.i(TAG, "onStop called");
         super.onStop();
         EventBus.getDefault().unregister(this);
     }
@@ -59,19 +58,19 @@ public class RecycleViewFragment extends Fragment{
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
+        Log.i(TAG, "onViewCreated called");
         super.onViewCreated(view, savedInstanceState);
         setupView(view);
 
-        if (marker == 1){
-            if (presenter == null){
-                presenter = new MyPresenter();
-            }
+        if (marker == 1 || presenter == null){
+            presenter = new MyPresenter();
             presenter.onGetView(this);
         }
 
     }
 
     private void setupView(View view) {
+        Log.i(TAG, "setupView called");
         recyclerView = (RecyclerView)view.findViewById(R.id.recycleView);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
         recyclerView.setLayoutManager(layoutManager);
@@ -81,6 +80,7 @@ public class RecycleViewFragment extends Fragment{
     }
 
     public void setView(List<Player> playerList){
+        Log.i(TAG, "setView called");
         adapter.updateAdapter(playerList);
     }
 
@@ -107,9 +107,11 @@ public class RecycleViewFragment extends Fragment{
 
     @Override
     public void onDestroy() {
+        Log.i(TAG, "onDestroy called");
         super.onDestroy();
         presenter.onGetView(null);
-        //presenter = null;
-
+        if (!getActivity().isChangingConfigurations()){
+            presenter = null;
+        }
     }
 }
