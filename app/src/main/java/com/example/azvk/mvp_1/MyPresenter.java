@@ -26,15 +26,23 @@ public class MyPresenter {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(playerData -> {
                             list = playerData;
+                            publish();
                         },
                         throwable -> {
                             Log.e("Error", throwable.getMessage());
                             error = throwable;
+                            publish();
+
                         }
                 );
     }
 
-    public void publish(){
+    public void onGetView(RecycleViewFragment view){
+        this.view = view;
+        publish();
+    }
+
+    private void publish(){
         if (view != null){
             if (list != null){
                 view.setView(list);

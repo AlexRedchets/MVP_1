@@ -15,6 +15,7 @@ import com.example.azvk.mvp_1.Clients.PlayerClient;
 import com.example.azvk.mvp_1.EventList;
 import com.example.azvk.mvp_1.Generator;
 import com.example.azvk.mvp_1.Models.Player;
+import com.example.azvk.mvp_1.MyPresenter;
 import com.example.azvk.mvp_1.R;
 
 import org.greenrobot.eventbus.EventBus;
@@ -32,6 +33,9 @@ public class RecycleViewFragment extends Fragment{
     private static final String TAG = RecycleViewFragment.class.getSimpleName();
     private RecycleViewAdapter adapter;
     private RecyclerView recyclerView;
+
+    private static MyPresenter presenter;
+
     private Subscription subscription;
     private Integer marker = 0;
 
@@ -58,6 +62,13 @@ public class RecycleViewFragment extends Fragment{
         super.onViewCreated(view, savedInstanceState);
         setupView(view);
 
+        if (marker == 1){
+            if (presenter == null){
+                presenter = new MyPresenter();
+            }
+            presenter.onGetView(this);
+        }
+
     }
 
     private void setupView(View view) {
@@ -66,6 +77,7 @@ public class RecycleViewFragment extends Fragment{
         recyclerView.setLayoutManager(layoutManager);
         adapter = new RecycleViewAdapter(getActivity()) ;
         recyclerView.setAdapter(adapter);
+
     }
 
     public void setView(List<Player> playerList){
@@ -78,7 +90,12 @@ public class RecycleViewFragment extends Fragment{
             case 111:
                 Log.i(TAG, "GET click received");
                 marker = 1;
-                onGetClicked();
+
+                if (presenter == null){
+                    presenter = new MyPresenter();
+                }
+                presenter.onGetView(this);
+
                 break;
             case 222:
                 Log.i(TAG, "CLEAR click received");
@@ -88,39 +105,11 @@ public class RecycleViewFragment extends Fragment{
         }
     }
 
-    private void onGetClicked(){
-        PlayerClient client = Generator.createService(PlayerClient.class);
-        Observable<List<Player>> russia_players = client.player("Russia");
-        subscription = russia_players
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(playerData -> {
-                    adapter.updateAdapter(playerData);
-                },
-                        throwable -> Log.e("Error", throwable.getMessage()));
-    }
-
     @Override
-    public void onPause() {
-        super.onPause();
-        if (subscription != null && !subscription.isUnsubscribed()){
-            subscription.unsubscribe();
-        }
-    }
+    public void onDestroy() {
+        super.onDestroy();
+        presenter.onGetView(null);
+        //presenter = null;
 
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt("marker", marker);
-    }
-
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        if(savedInstanceState != null){
-            marker = savedInstanceState.getInt("marker");}
-        if (marker ==1){
-            onGetClicked();
-        }
     }
 }
