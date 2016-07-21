@@ -49,6 +49,7 @@ public class MyPresenter {
             }
             else if (error != null){
                 //function to show info
+                Log.e("Error", "ERROR");
             }
 
         }

@@ -11,9 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.azvk.mvp_1.Adapters.RecycleViewAdapter;
-import com.example.azvk.mvp_1.Clients.PlayerClient;
 import com.example.azvk.mvp_1.EventList;
-import com.example.azvk.mvp_1.Generator;
 import com.example.azvk.mvp_1.Models.Player;
 import com.example.azvk.mvp_1.MyPresenter;
 import com.example.azvk.mvp_1.R;
@@ -23,8 +21,6 @@ import org.greenrobot.eventbus.Subscribe;
 
 import java.util.List;
 
-import rx.Subscription;
-
 public class RecycleViewFragment extends Fragment{
 
     private static final String TAG = RecycleViewFragment.class.getSimpleName();
@@ -32,9 +28,32 @@ public class RecycleViewFragment extends Fragment{
     private RecyclerView recyclerView;
 
     private static MyPresenter presenter;
+    private static boolean isGetButtonClicked = false;
 
-    private Subscription subscription;
-    private Integer marker = 0;
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        Log.i(TAG, "onCreateView called");
+        return inflater.inflate(R.layout.fragment_recycle_view, container, false);
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        Log.i(TAG, "onViewCreated called");
+        super.onViewCreated(view, savedInstanceState);
+
+        recyclerView = (RecyclerView)view.findViewById(R.id.recycleView);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
+        recyclerView.setLayoutManager(layoutManager);
+        adapter = new RecycleViewAdapter(getActivity()) ;
+        recyclerView.setAdapter(adapter);
+
+        if (isGetButtonClicked){
+            Log.i(TAG, "GetButtonClicked");
+            presenter = new MyPresenter();
+            presenter.onGetView(this);
+        }
+    }
 
     @Override
     public void onStart() {
@@ -50,35 +69,6 @@ public class RecycleViewFragment extends Fragment{
         EventBus.getDefault().unregister(this);
     }
 
-    @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_recycle_view, container, false);
-    }
-
-    @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        Log.i(TAG, "onViewCreated called");
-        super.onViewCreated(view, savedInstanceState);
-        setupView(view);
-
-        if (marker == 1 || presenter == null){
-            presenter = new MyPresenter();
-            presenter.onGetView(this);
-        }
-
-    }
-
-    private void setupView(View view) {
-        Log.i(TAG, "setupView called");
-        recyclerView = (RecyclerView)view.findViewById(R.id.recycleView);
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
-        recyclerView.setLayoutManager(layoutManager);
-        adapter = new RecycleViewAdapter(getActivity()) ;
-        recyclerView.setAdapter(adapter);
-
-    }
-
     public void setView(List<Player> playerList){
         Log.i(TAG, "setView called");
         adapter.updateAdapter(playerList);
@@ -89,17 +79,15 @@ public class RecycleViewFragment extends Fragment{
         switch (eventList.getResultCode()){
             case 111:
                 Log.i(TAG, "GET click received");
-                marker = 1;
-
-                if (presenter == null){
-                    presenter = new MyPresenter();
-                }
+                isGetButtonClicked = true;
+                presenter = new MyPresenter();
                 presenter.onGetView(this);
 
                 break;
             case 222:
                 Log.i(TAG, "CLEAR click received");
-                marker = 0;
+                isGetButtonClicked = false;
+                presenter = null;
                 adapter.clearAll();
                 break;
         }
@@ -109,9 +97,14 @@ public class RecycleViewFragment extends Fragment{
     public void onDestroy() {
         Log.i(TAG, "onDestroy called");
         super.onDestroy();
-        presenter.onGetView(null);
+        if (presenter != null) {
+            Log.i(TAG, "onDestroy presenter.onGetView(null)");
+            presenter.onGetView(null);
+        }
         if (!getActivity().isChangingConfigurations()){
+            Log.i(TAG, "isChangingConfigurations false");
             presenter = null;
         }
     }
+
 }
