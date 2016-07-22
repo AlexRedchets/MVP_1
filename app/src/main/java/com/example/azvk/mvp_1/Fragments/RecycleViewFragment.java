@@ -48,9 +48,13 @@ public class RecycleViewFragment extends Fragment{
         adapter = new RecycleViewAdapter(getActivity()) ;
         recyclerView.setAdapter(adapter);
 
-        if (isGetButtonClicked){
+        if (presenter == null){
             Log.i(TAG, "GetButtonClicked");
-            presenter = new MyPresenter();
+            if (isGetButtonClicked) {
+                presenter = new MyPresenter();
+            }
+        }
+        else {
             presenter.onGetView(this);
         }
     }
